@@ -99,19 +99,21 @@ export default function ActiveWorkout({ workoutId, onFinish, onExit }) {
     return () => { cancelled = true; window.clearTimeout(timer) }
   }, [summaryOpen, captureAttempt])
 
-  const shareSummary = (target) => {
+  // Botão único de compartilhamento: prioriza a Web Share API nativa com a
+  // imagem já gerada do resumo. Quando o navegador não suporta compartilhar
+  // arquivos, a imagem é salva localmente e o WhatsApp Web é aberto como
+  // atalho (fallback), sem recriar os antigos botões de Instagram/WhatsApp/X.
+  const shareSummary = () => {
     if (!summaryBlob) return
     setSharing(true)
     try {
-      const file = new File([summaryBlob], `${workout.name.replace(/\s+/g, '-').toLowerCase()}-treino.png`, { type: 'image/png' })
-      if (target === 'x' && !navigator.canShare?.({ files: [file] })) {
-        downloadBlob(summaryBlob, file.name)
-        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(`Treino ${workout.name} concluído 💪`)}`, '_blank', 'noopener,noreferrer')
-      } else if (navigator.canShare?.({ files: [file] })) {
-        navigator.share({ files: [file], title: workout.name, text: target === 'instagram' ? 'Compartilhar no Instagram' : `Treino ${workout.name}` })
+      const file = new File([summaryBlob], `${workout.name.replace(/\s+/g, '-').toLowerCase()}.png`, { type: 'image/png' })
+      if (navigator.canShare?.({ files: [file] })) {
+        navigator.share({ files: [file], title: workout.name})
           .catch((error) => { if (error?.name !== 'AbortError') { console.error(error); setShareError('Não foi possível compartilhar a imagem.') } })
       } else {
         downloadBlob(summaryBlob, file.name)
+        window.open(`https://wa.me/}`, '_blank', 'noopener,noreferrer')
       }
     } finally {
       setSharing(false)
@@ -139,21 +141,24 @@ export default function ActiveWorkout({ workoutId, onFinish, onExit }) {
         <div className="pt-2">{confirmFinish && !allComplete ? <div className="rounded-xl bg-graphite-800 border border-graphite-700 p-4 space-y-3"><p className="text-sm text-graphite-300">Você ainda tem etapas não concluídas. Finalizar mesmo assim?</p><div className="flex gap-2"><Button variant="complete" icon={Flag} onClick={handleFinish}>Finalizar treino</Button><Button variant="ghost" onClick={() => setConfirmFinish(false)}>Continuar</Button></div></div> : <Button size="lg" fullWidth variant={allComplete ? 'complete' : 'secondary'} icon={allComplete ? CheckCircle2 : Flag} onClick={() => allComplete ? handleFinish() : setConfirmFinish(true)}>{allComplete ? 'Concluir treino' : 'Finalizar treino'}</Button>}</div>
       </div>
 
-      {summaryOpen && <div className="fixed inset-0 z-50 bg-black/85 overflow-y-auto px-4 py-6"><div className="max-w-xl mx-auto space-y-3"><div className="flex items-center justify-between"><p className="text-sm font-semibold text-graphite-200">Treino concluído</p><button onClick={() => onFinish()}  className="p-2 rounded-full bg-graphite-800 text-graphite-200"><X size={20} /></button></div><WorkoutSummary ref={summaryRef} workout={workout} />
+      {summaryOpen && <div className="fixed inset-0 z-50 bg-black/85 overflow-y-auto px-4 py-6"><div className="max-w-2xl mx-auto space-y-3"><div className="flex items-center justify-between"><p className="text-sm font-semibold text-graphite-200">Treino concluído</p><button onClick={() => onFinish()}  className="p-2 rounded-full bg-graphite-800 text-graphite-200"><X size={20} /></button></div><WorkoutSummary
+        ref={summaryRef}
+        workout={{
+          ...workout,
+          durationSeconds: elapsedSeconds,
+          durationLabel: formatSessionTime(elapsedSeconds),
+        }}
+      />
         {shareError ? (
           <div className="rounded-xl bg-danger-500/10 border border-danger-500/30 p-3 flex items-center justify-between gap-3">
             <p className="text-xs text-danger-300">{shareError}</p>
             <button onClick={() => setCaptureAttempt((n) => n + 1)} className="text-xs font-semibold text-danger-300 underline shrink-0">Tentar novamente</button>
           </div>
         ) : (
-          <div className="grid grid-cols-3 gap-2">
-            <Button variant="secondary" icon={Share2} disabled={sharing || !summaryBlob} onClick={() => shareSummary('instagram')}>Instagram</Button>
-            <Button variant="secondary" icon={Share2} disabled={sharing || !summaryBlob} onClick={() => shareSummary('whatsapp')}>WhatsApp</Button>
-            <Button variant="secondary" icon={Share2} disabled={sharing || !summaryBlob} onClick={() => shareSummary('x')}>X</Button>
-          </div>
+          <Button size="lg" fullWidth variant="secondary" icon={Share2} disabled={sharing || !summaryBlob} onClick={shareSummary}>Compartilhar</Button>
         )}
         {!summaryBlob && !shareError && <p className="text-[11px] text-graphite-500 text-center">Gerando imagem do resumo…</p>}
-        <Button size="lg" fullWidth variant="success" onClick={onFinish}>Voltar ao início</Button><p className="text-[11px] leading-relaxed text-graphite-500 text-center">Em navegadores compatíveis, a imagem abre o menu nativo de compartilhamento para você escolher o app. Quando o navegador não permite anexar a imagem diretamente, ela é salva e o destino é aberto como alternativa.</p></div></div>}
+        <Button size="lg" fullWidth variant="complete" onClick={onFinish}>Voltar ao início</Button><p className="text-[11px] leading-relaxed text-graphite-500 text-center">Em navegadores compatíveis, a imagem abre o menu nativo de compartilhamento para você escolher o app. Quando o navegador não permite anexar a imagem diretamente, ela é salva e o destino é aberto como alternativa.</p></div></div>}
 
       {confirmExit && <div className="fixed inset-0 z-50 flex items-center justify-center px-6"><div className="absolute inset-0 bg-black/70" onClick={() => setConfirmExit(false)} /><div className="relative bg-graphite-900 border border-graphite-700 rounded-2xl p-5 w-full max-w-sm space-y-4"><h3 className="font-display text-lg font-bold text-graphite-50">Sair do treino?</h3><p className="text-sm text-graphite-400">O progresso desta sessão não será salvo se você sair agora.</p><div className="flex gap-2"><Button variant="danger" onClick={onExit}>Sair sem salvar</Button><Button variant="ghost" onClick={() => setConfirmExit(false)}>Continuar</Button></div></div></div>}
       <RestTimer session={restSession} onClose={() => setRestSession(null)} />
