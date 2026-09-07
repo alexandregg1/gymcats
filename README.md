@@ -133,10 +133,19 @@ As funcionalidades atuais representam a base para uma plataforma mais completa d
 
 ## Licença
 
-Este projeto está licenciado sob a Licença MIT.
-
 Copyright (c) 2026
 
-A permissão é concedida, gratuitamente, a qualquer pessoa que obtenha uma cópia deste software e dos arquivos de documentação associados, para utilizar, copiar, modificar, mesclar, publicar, distribuir, sublicenciar e/ou vender cópias do Software, sujeita às condições da Licença MIT.
+All Rights Reserved.
 
-O Software é fornecido "como está", sem garantia de qualquer tipo, expressa ou implícita, incluindo, entre outras, garantias de comercialização, adequação a uma finalidade específica e não violação.
+This software and its associated source code are proprietary and confidential.
+
+No part of this software may be copied, reproduced, modified, distributed,
+published, sublicensed, sold, or otherwise used without prior written
+permission from the copyright holder.
+
+Unauthorized use, reproduction, modification, or distribution of this
+software is strictly prohibited.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
