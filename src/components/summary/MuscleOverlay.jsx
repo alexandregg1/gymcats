@@ -1,58 +1,51 @@
 import React from 'react';
+import { normalizeMuscleName } from '../../data/exercises.js';
 
 // Imagens base
-import frontModel from '../../assets/front_model.png';
-import backModel from '../../assets/back_model.png';
+import frontModel from '../../assets/anatomy/front_model.png';
+import backModel from '../../assets/anatomy/back_model.png';
 
 // Frente
-import shoulders from '../../assets/front-shoulders.png';
-import chest from '../../assets/front-chest.png';
-import biceps from '../../assets/front-biceps.png';
-import forearm from '../../assets/front-forearm.png';
-import abs from '../../assets/front-abs.png';
-import quads from '../../assets/front-quads.png';
+import shoulders from '../../assets/anatomy/front-shoulders.png';
+import chest from '../../assets/anatomy/front-chest.png';
+import biceps from '../../assets/anatomy/front-biceps.png';
+import forearm from '../../assets/anatomy/front-forearm.png';
+import abs from '../../assets/anatomy/front-abs.png';
+import quads from '../../assets/anatomy/front-quads.png';
 
 // Costas
-import lats from '../../assets/back-lats.png';
-import triceps from '../../assets/back-triceps.png';
-import hams from '../../assets/back-hams.png';
-import glutes from '../../assets/back-glutes.png';
-import calves from '../../assets/back-calves.png';
-import { normalizeMuscleName } from '../../data/exercises.js';
+import lats from '../../assets/anatomy/back-lats.png';
+import triceps from '../../assets/anatomy/back-triceps.png';
+import hams from '../../assets/anatomy/back-hams.png';
+import glutes from '../../assets/anatomy/back-glutes.png';
+import calves from '../../assets/anatomy/back-calves.png';
 
 const MUSCLE_LAYERS = [
   { side: 'front', image: shoulders, groups: ['Ombros'] },
   { side: 'front', image: chest, groups: ['Peito'] },
   { side: 'front', image: biceps, groups: ['Bíceps'] },
-  { side: 'front', image: forearm, groups: ['Antebraços'] },
-  { side: 'front', image: abs, groups: ['Abdômen'] },
+  { side: 'front', image: forearm, groups: ['Antebraço', 'Antebraços'] },
+  { side: 'front', image: abs, groups: ['Abdômen', 'Abdominais'] },
   { side: 'front', image: quads, groups: ['Quadríceps'] },
 
-  { side: 'back', image: lats, groups: ['Costas'] },
+  { side: 'back', image: lats, groups: ['Costas', 'Dorsais', 'Trapézio', 'Trapézio Inferior', 'Eretores da Espinha'] },
   { side: 'back', image: triceps, groups: ['Tríceps'] },
-  { side: 'back', image: hams, groups: ['Posteriores'] },
+  { side: 'back', image: hams, groups: ['Posteriores', 'Posterior de Coxa', 'Posteriores de Coxa'] },
   { side: 'back', image: glutes, groups: ['Glúteos'] },
-  { side: 'back', image: calves, groups: ['Panturrilhas'] },
+  { side: 'back', image: calves, groups: ['Panturrilhas', 'Panturrilha'] },
 ];
 
 export default function MuscleOverlay({ side = 'front', muscleGroups = [] }) {
   const normalizedSide = side === 'back' ? 'back' : 'front';
-  
+
   const selectedGroups = new Set(
-    (Array.isArray(muscleGroups) ? muscleGroups : []).map(normalizeMuscleName)
+    (Array.isArray(muscleGroups) ? muscleGroups : []).map(normalizeMuscleName),
   );
 
   const baseImage = normalizedSide === 'front' ? frontModel : backModel;
 
-  // Lógica: Pegamos todos os músculos ativos e os colocamos em um array
-  const activeLayers = MUSCLE_LAYERS
-    .filter((layer) => layer.side === normalizedSide)
-    .filter((layer) => layer.groups.some((group) => selectedGroups.has(normalizeMuscleName(group))));
-
   return (
     <div className="relative w-full aspect-[1/1] overflow-hidden pointer-events-none">
-      
-      {/* 1. Camada Base (Sempre visível) */}
       <img
         src={baseImage}
         alt=""
@@ -62,25 +55,30 @@ export default function MuscleOverlay({ side = 'front', muscleGroups = [] }) {
         style={{ zIndex: 0 }}
       />
 
-      {/* 2. Renderiza SOMENTE os músculos que estão ativos, um por cima do outro */}
-      {activeLayers.map((layer) => (
-        <img
-          key={layer.groups[0]}
-          src={layer.image}
-          alt=""
-          aria-hidden="true"
-          draggable="false"
-          className="absolute inset-0 w-full h-full object-contain"
-          style={{
-            zIndex: 1, // Todos sobem para a camada 1, sobre o corpo
-            opacity: 1,
-            // O glow já vem embutido no próprio sprite (fundo transparente fora do músculo),
-            // então não aplicamos mais drop-shadow aqui — isso evitava o "quadrado" de sombra
-            // por trás de cada camada quando várias eram somadas.
-            transition: 'opacity 0.5s ease',
-          }}
-        />
-      ))}
+      {MUSCLE_LAYERS
+        .filter((layer) => layer.side === normalizedSide)
+        .map((layer) => {
+          const isActive = layer.groups.some((group) =>
+            selectedGroups.has(normalizeMuscleName(group)),
+          );
+
+          return (
+            <img
+              key={`${layer.side}-${layer.groups[0]}`}
+              src={layer.image}
+              alt=""
+              aria-hidden="true"
+              draggable="false"
+              className="absolute inset-0 w-full h-full object-contain select-none"
+              style={{
+                zIndex: 1,
+                opacity: isActive ? 1 : 0,
+                filter: isActive ? 'drop-shadow(0 0 10px #A855F7)' : 'none',
+                transition: 'opacity 0.5s ease, filter 0.5s ease',
+              }}
+            />
+          );
+        })}
     </div>
   );
 }
